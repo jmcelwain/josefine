@@ -6,7 +6,6 @@ edition = "2018"
 
 [dependencies]
 memmap = "0.7.0"
-byteorder = "1.2.7"
 iron = "0.6.*"
 router = "*"
 slog = "2.4.1"

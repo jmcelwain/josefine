@@ -1,7 +1,6 @@
-use std::convert::From;
+use std::convert::{From, TryInto};
 use std::io::Cursor;
-
-use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
+use std::fs::read;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Entry {
@@ -18,19 +17,17 @@ impl Entry {
 impl From<Entry> for Vec<u8> {
     fn from(entry: Entry) -> Self {
         let mut bytes = vec![];
-        bytes.write_u64::<BigEndian>(entry.offset).unwrap();
-        bytes.write_u64::<BigEndian>(entry.position).unwrap();
+        bytes.extend_from_slice(&entry.offset.to_be_bytes());
+        bytes.extend_from_slice(&entry.position.to_be_bytes());
         bytes
     }
 }
 
 impl From<&[u8]> for Entry {
     fn from(bytes: &[u8]) -> Self {
-        assert_eq!(bytes.len(), 16);
-        let offset_vec: Vec<u8> = bytes.iter().take(8).cloned().collect();
-        let offset = Cursor::new(offset_vec).read_u64::<BigEndian>().unwrap();
-        let position_vec: Vec<u8> = bytes.iter().skip(8).take(16).cloned().collect();
-        let position = Cursor::new(position_vec).read_u64::<BigEndian>().unwrap();
+        let bytes: &[u8; 16] = bytes.try_into().unwrap();
+        let offset = u64::from_be_bytes( bytes[0..8].try_into().unwrap());
+        let position = u64::from_be_bytes( bytes[8..16].try_into().unwrap());
         Entry { offset, position }
     }
 }

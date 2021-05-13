@@ -70,7 +70,7 @@ impl Index {
 #[cfg(test)]
 mod tests {
 
-    use std::env;
+    use std::{env, path::{Path, PathBuf}};
     use std::fs;
     use std::fs::OpenOptions;
     use std::io::Read;
@@ -79,30 +79,25 @@ mod tests {
 
     use crate::entry::Entry;
 
-    fn before() {
+    fn before() -> PathBuf {
         let mut path = env::temp_dir();
         path.push("test");
         fs::create_dir_all(&path).expect("Couldn't create log dir");
+        path
     }
 
     #[test]
     fn write_index() {
-        before();
-
-        let mut path = env::temp_dir();
-        path.push("test");
-        let mut index = super::Index::new(path, 0);
+        let path = before();
+        let mut index = super::Index::new(path.to_path_buf(), 0);
         let entry = Entry::new(0, 10);
         index.write_entry(entry);
     }
 
     #[test]
     fn read_index() {
-        before();
-
-        let mut path = env::temp_dir();
-        path.push("test");
-        let mut index = super::Index::new(path, 0);
+        let path = before();
+        let mut index = super::Index::new(path.to_path_buf(), 0);
         let entry = Entry::new(0, 10);
         index.write_entry(entry);
         assert_eq!(entry, index.read_entry(0));
@@ -110,16 +105,10 @@ mod tests {
 
     #[test]
     fn relative_offset() {
-        before();
-
-        let mut path = env::temp_dir();
-        path.push("test");
-
-        let mut index = super::Index::new(path, 100);
+        let path = before();
+        let mut index = super::Index::new(path.to_path_buf(), 100);
         index.write_entry(Entry::new(115, 20));
-
-        let mut path = env::temp_dir();
-        path.push("test");
+        let mut path = path;
         path.push("100.index");
         let mut file = OpenOptions::new()
             .read(true)
@@ -135,5 +124,15 @@ mod tests {
         let entry = Entry::from(bytes.as_ref());
         assert_eq!(entry.offset, 15);
         assert_eq!(entry.position, 20);
+    }
+
+    #[test]
+    fn read_offset() {
+        let path = before();
+        let mut index = super::Index::new(path.to_path_buf(), 100);
+        index.write_entry(Entry::new(115, 20));
+
+        let entry = index.read_entry(115);
+        assert_eq!(entry, Entry::new(115, 20));
     }
 }

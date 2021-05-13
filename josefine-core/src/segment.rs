@@ -10,6 +10,7 @@ use crate::index::Index;
 
 const MAX_SEGMENT_BYES: u64 = 1024 * 1024 * 1024;
 
+#[allow(dead_code)]
 pub struct Segment {
     base_offset: u64,
     pub next_offset: u64,
@@ -18,6 +19,7 @@ pub struct Segment {
     index: Index,
 }
 
+#[allow(dead_code)]
 impl Segment {
     pub fn new(path: PathBuf, base_offset: u64) -> Segment {
         let mut path = path.clone();
